@@ -18,6 +18,10 @@ class Response(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
+    def content(self) -> bytes:
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def text(self) -> str:
         raise NotImplementedError
 
@@ -50,6 +54,9 @@ class HttpxResponse(Response):
 
     def raise_for_status(self):
         self.response.raise_for_status()
+
+    def content(self):
+        return self.response.content
 
     def text(self):
         return self.response.text
