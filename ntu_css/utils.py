@@ -29,7 +29,7 @@ def assert_list_of_html_element(o):
     return [assert_html_element(o) for o in assert_list(o)]
 
 
-def document_from_string(html: str):
+def document_from_string(html: str | bytes):
     return assert_html_element(lxml.html.document_fromstring(html))
 
 
