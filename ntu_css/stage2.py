@@ -5,6 +5,7 @@ from collections.abc import Iterable
 
 import lxml.html
 
+import ntu_css.exceptions
 import ntu_css.http
 import ntu_css.single_sign_on
 import ntu_css.utils
@@ -17,7 +18,7 @@ class SessionInfo:
     extid: str
 
 
-class ErrorMessageInContentDivisionFromServer(Exception):
+class ErrorMessageInContentDivisionFromServer(ntu_css.exceptions.Error):
     pass
 
 
