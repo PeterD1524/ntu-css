@@ -1,7 +1,15 @@
 import abc
 import dataclasses
+from typing import Any
 
 import httpx
+
+
+@dataclasses.dataclass
+class Request:
+    method: str
+    url: str
+    data: Any
 
 
 class Response(abc.ABC):
