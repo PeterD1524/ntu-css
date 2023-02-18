@@ -38,3 +38,46 @@ async def main():
     ]
     ntu_css.stage2.check_course_selection(course_selection_list_items)
 ```
+## 選課結果查詢 Example
+```python
+import asyncio
+
+import httpx
+
+import ntu_css.http
+import ntu_css.results
+
+
+async def main():
+    http_client = ntu_css.http.HttpxClient(httpx.AsyncClient())
+    client = ntu_css.results.Client(http_client)
+    await client.login(username=USERNAME, password=PASSWORD)
+
+    # 初選第一階段分發結果
+    async for item in client.get_result(
+        ntu_css.results.ResultKind.preregistration_stage1
+    ):
+        print(item)
+
+    # 初選第二階段分發結果
+    async for item in client.get_result(
+        ntu_css.results.ResultKind.preregistration_stage2
+    ):
+        print(item)
+
+    # 初選第一階段操作紀錄
+    async for item in client.get_operation_log(
+        ntu_css.results.ResultKind.preregistration_stage1
+    ):
+        print(item)
+
+    # 初選第一階段未分發上課程原因
+    async for item in client.get_failed_courses(
+        ntu_css.results.ResultKind.preregistration_stage1
+    ):
+        print(item)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
