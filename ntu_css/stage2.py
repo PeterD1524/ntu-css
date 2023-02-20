@@ -1,6 +1,4 @@
 import dataclasses
-import string
-import urllib.parse
 from collections.abc import Iterable
 
 import lxml.html
@@ -8,14 +6,8 @@ import lxml.html
 import ntu_css.exceptions
 import ntu_css.http
 import ntu_css.single_sign_on
+import ntu_css.something
 import ntu_css.utils
-
-
-@dataclasses.dataclass
-class SessionInfo:
-    regno: str
-    lang: str
-    extid: str
 
 
 class ErrorMessageInContentDivisionFromServer(ntu_css.exceptions.Error):
@@ -75,13 +67,6 @@ class CourseSelectionListItem:
     remark: str
 
 
-def check_serial_number(serial_number: str):
-    if len(serial_number) != 5:
-        raise ValueError("serial number length should be 5")
-    if not all(c in string.digits for c in serial_number):
-        raise ValueError("serial number should all be digits")
-
-
 def check_priority(priority: int):
     if priority not in range(1, 100):
         raise ValueError("priority should be in range(1, 100)")
@@ -89,7 +74,7 @@ def check_priority(priority: int):
 
 @dataclasses.dataclass
 class CourseSelectionClient:
-    session_info: SessionInfo
+    session_info: ntu_css.something.SessionInfo
 
     client: ntu_css.http.Client
 
@@ -120,7 +105,7 @@ class CourseSelectionClient:
             yield table_row_to_course_selection_list_item(table_row)
 
     async def add_course(self, serno: str, priority: int):
-        check_serial_number(serno)
+        ntu_css.utils.check_serial_number(serno)
         check_priority(priority)
         response = await self.client.request(
             "GET",
@@ -184,31 +169,20 @@ class LoginClient:
         response = await self.client.request(
             "GET", "/coursetake/login.aspx", follow_redirects=True
         )
-
         request = ntu_css.single_sign_on.login(
             response=response, username=username, password=password
         )
-
         response = await self.client.request(
             request.method, request.url, data=request.data, follow_redirects=True
         )
         response.raise_for_status()
-
-        response_url_parse_result = urllib.parse.urlparse(response.url())
-        assert response_url_parse_result.scheme == "https"
-        assert (
-            response_url_parse_result.netloc
-            == urllib.parse.urlparse(self.client.base_url()).netloc
+        query = ntu_css.utils.check_response_url(
+            response=response,
+            http_client=self.client,
+            path="/coursetake/index.php/survey-note",
+            query_keys={"regno", "lang", "extid"},
         )
-        assert response_url_parse_result.path == "/coursetake/index.php/survey-note"
-        query = urllib.parse.parse_qs(
-            response_url_parse_result.query, keep_blank_values=True, strict_parsing=True
-        )
-        assert query.keys() == {"regno", "lang", "extid"}
-        assert all(len(values) == 1 for values in query.values())
-        assert response_url_parse_result.params == ""
-        assert response_url_parse_result.fragment == ""
-        return SessionInfo(
+        return ntu_css.something.SessionInfo(
             regno=query["regno"][0], lang=query["lang"][0], extid=query["extid"][0]
         )
 
@@ -217,7 +191,7 @@ def check_course_selection(items: Iterable[CourseSelectionListItem]):
     serial_numbers = set[str]()
     priorities = set[int]()
     for item in items:
-        check_serial_number(item.serial_number)
+        ntu_css.utils.check_serial_number(item.serial_number)
         if item.serial_number in serial_numbers:
             raise ValueError("duplicate serial numbers found")
         serial_numbers.add(item.serial_number)

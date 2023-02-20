@@ -35,17 +35,7 @@ FAILED_COURSES_TABLE_HEADER_TEXT_CONTENTS = (
 
 
 def check_table_headers(table_row: lxml.html.HtmlElement, text_contents: Iterable[str]):
-    strong_importances = ntu_css.utils.assert_list_of_html_element(
-        table_row.xpath("th/strong")
-    )
-    assert all(
-        text_content == ntu_css.utils.text_content(element)
-        for (text_content, element) in zip(
-            text_contents, strong_importances, strict=True
-        )
-    )
-    table_data_cells = ntu_css.utils.assert_list_of_html_element(table_row.xpath("td"))
-    assert not table_data_cells
+    ntu_css.utils.check_table_headers(table_row, "th/strong", text_contents)
 
 
 @dataclasses.dataclass
@@ -60,18 +50,8 @@ class ResultItem:
     mark: str
 
 
-def check_table_row_for_data(
-    table_row: lxml.html.HtmlElement, table_header_text_contents: tuple[str]
-):
-    table_headers = ntu_css.utils.assert_list_of_html_element(table_row.xpath("th"))
-    assert not table_headers
-    table_data_cells = ntu_css.utils.assert_list_of_html_element(table_row.xpath("td"))
-    assert len(table_data_cells) == len(table_header_text_contents)
-    return table_data_cells
-
-
 def table_row_to_result_item(table_row: lxml.html.HtmlElement):
-    table_data_cells = check_table_row_for_data(
+    table_data_cells = ntu_css.utils.check_table_row_for_data(
         table_row, RESULT_TABLE_HEADER_TEXT_CONTENTS
     )
     return ResultItem(
@@ -93,7 +73,7 @@ class OperationLogItem:
 
 
 def table_row_to_operation_log_item(table_row: lxml.html.HtmlElement):
-    table_data_cells = check_table_row_for_data(
+    table_data_cells = ntu_css.utils.check_table_row_for_data(
         table_row, OPERATION_LOG_TABLE_HEADER_TEXT_CONTENTS
     )
     return OperationLogItem(
@@ -115,7 +95,7 @@ class FailedCourse:
 
 
 def table_row_to_failed_course(table_row: lxml.html.HtmlElement):
-    table_data_cells = check_table_row_for_data(
+    table_data_cells = ntu_css.utils.check_table_row_for_data(
         table_row, FAILED_COURSES_TABLE_HEADER_TEXT_CONTENTS
     )
     return FailedCourse(
